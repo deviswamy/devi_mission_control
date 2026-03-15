@@ -1,14 +1,11 @@
+import type { User } from "@mission-control/shared";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
-import { AuthProvider } from "../store/authContext";
 
 export type RouterContext = {
 	isAuthenticated: boolean;
+	user: User | null;
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-	component: () => (
-		<AuthProvider>
-			<Outlet />
-		</AuthProvider>
-	),
+	component: () => <Outlet />,
 });
