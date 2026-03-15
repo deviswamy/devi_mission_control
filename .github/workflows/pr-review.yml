@@ -1,0 +1,172 @@
+name: PR Agent Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  code-review:
+    name: Code Reviewer Agent
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run code-reviewer agent
+        id: claude-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: >-
+            --model claude-opus-4-6
+            --max-turns 5
+            --allowedTools "Read,Grep,Glob,Bash"
+          prompt: |
+            You are a senior code reviewer ensuring high standards of code quality and security.
+
+            PR #${{ github.event.pull_request.number }} on ${{ github.repository }}.
+            Base: ${{ github.base_ref }} → Head: ${{ github.head_ref }}
+
+            1. Run `git diff origin/${{ github.base_ref }}...HEAD` to see all changes
+            2. Focus on modified files and begin review immediately
+
+            ## Security (CRITICAL)
+            - Hardcoded credentials, SQL injection, XSS, missing input validation
+            - Insecure dependencies, path traversal, CSRF, auth bypasses
+
+            ## Code Quality (HIGH)
+            - Functions >50 lines, files >800 lines, nesting >4 levels
+            - Missing error handling, console.log left in, missing tests for new code
+
+            ## Performance (MEDIUM)
+            - Inefficient algorithms, unnecessary React re-renders, N+1 queries
+
+            ## Project-Specific
+            - Bun monorepo: apps/client (React+TS), apps/server (Hono+TS), packages/shared
+            - All data must be org-scoped — check for tenant isolation leaks
+            - Verify role checks (Director / Mission Lead / Crew Member) via Auth0
+            - Zod validation shared between frontend and backend
+            - No emojis in codebase, use immutability patterns (spread operator)
+
+            ## Approval Criteria
+            - Approve: No CRITICAL or HIGH issues
+            - Warning: MEDIUM issues only
+            - Block: CRITICAL or HIGH issues found
+
+            Output as markdown for a GitHub PR comment. Start with a one-line summary.
+
+      - name: Read review output
+        id: read-review
+        if: always()
+        run: |
+          OUTPUT_FILE="${{ steps.claude-review.outputs.execution_file }}"
+          if [ -f "$OUTPUT_FILE" ]; then
+            {
+              echo 'REVIEW_BODY<<HEREDOC_DELIMITER'
+              echo "## Code Review (claude-opus-4-6)"
+              echo ""
+              cat "$OUTPUT_FILE"
+              echo 'HEREDOC_DELIMITER'
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'REVIEW_BODY<<HEREDOC_DELIMITER'
+              echo "## Code Review (claude-opus-4-6)"
+              echo ""
+              echo "_Review agent did not produce output. Check the workflow logs._"
+              echo 'HEREDOC_DELIMITER'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post review comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.read-review.outputs.REVIEW_BODY }}
+
+  code-simplifier:
+    name: Code Simplifier Agent
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run code-simplifier agent
+        id: claude-simplifier
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: >-
+            --model claude-opus-4-6
+            --max-turns 5
+            --allowedTools "Read,Glob,Grep,Bash"
+          prompt: |
+            You are an expert code simplification specialist. Enhance clarity and maintainability
+            while preserving exact functionality.
+
+            PR #${{ github.event.pull_request.number }} on ${{ github.repository }}.
+            Base: ${{ github.base_ref }} → Head: ${{ github.head_ref }}
+
+            1. Run `git diff origin/${{ github.base_ref }}...HEAD` to see all changes
+            2. Identify simplification opportunities in modified code only
+
+            ## Standards
+            - Prefer `function` keyword over arrow functions for top-level declarations
+            - Explicit return type annotations for top-level functions
+            - Avoid nested ternaries — prefer switch/if-else chains
+            - Choose clarity over brevity
+            - ES modules with proper import sorting
+
+            ## Project Context
+            - Bun monorepo: apps/client (React+TS), apps/server (Hono+TS), packages/shared
+            - Drizzle ORM + PostgreSQL, Auth0, TanStack Router + Query, Zod
+
+            ## Maintain Balance — Avoid
+            - Reducing clarity in the name of brevity
+            - Removing helpful abstractions
+            - Combining too many concerns into one function
+
+            For each suggestion, show current code vs proposed simplification.
+            If no simplifications are warranted, say so clearly.
+            Output as markdown for a GitHub PR comment. Start with a one-line summary.
+
+      - name: Read simplifier output
+        id: read-simplifier
+        if: always()
+        run: |
+          OUTPUT_FILE="${{ steps.claude-simplifier.outputs.execution_file }}"
+          if [ -f "$OUTPUT_FILE" ]; then
+            {
+              echo 'SIMPLIFIER_BODY<<HEREDOC_DELIMITER'
+              echo "## Code Simplification Suggestions (claude-opus-4-6)"
+              echo ""
+              cat "$OUTPUT_FILE"
+              echo 'HEREDOC_DELIMITER'
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'SIMPLIFIER_BODY<<HEREDOC_DELIMITER'
+              echo "## Code Simplification Suggestions (claude-opus-4-6)"
+              echo ""
+              echo "_Simplifier agent did not produce output. Check the workflow logs._"
+              echo 'HEREDOC_DELIMITER'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post simplifier comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.read-simplifier.outputs.SIMPLIFIER_BODY }}
