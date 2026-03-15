@@ -1,4 +1,9 @@
 plans
+.claude/worktrees/*
 node_modules
 dist
 Research
+.env
+.env.local
+*.tsbuildinfo
+drizzle/

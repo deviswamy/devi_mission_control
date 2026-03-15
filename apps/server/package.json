@@ -1,0 +1,30 @@
+{
+	"name": "@mission-control/server",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "bun --watch src/index.ts",
+		"build": "bun build src/index.ts --outdir dist --target bun",
+		"start": "bun dist/index.js",
+		"typecheck": "tsc --noEmit",
+		"db:generate": "bunx drizzle-kit generate",
+		"db:migrate": "bunx drizzle-kit migrate",
+		"db:push": "bunx drizzle-kit push",
+		"db:studio": "bunx drizzle-kit studio"
+	},
+	"dependencies": {
+		"@mission-control/shared": "workspace:*",
+		"@hono/zod-validator": "^0.4.1",
+		"drizzle-orm": "^0.38.3",
+		"hono": "^4.6.17",
+		"jose": "^5.9.6",
+		"postgres": "^3.4.5",
+		"zod": "^3.23.8"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.1.14",
+		"drizzle-kit": "^0.29.1",
+		"typescript": "^5.5.4"
+	}
+}
