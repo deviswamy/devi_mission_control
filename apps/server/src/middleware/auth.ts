@@ -61,14 +61,14 @@ export const authMiddleware = createMiddleware(async (c, next) => {
 		name: row.users.name,
 		email: row.users.email,
 		role: row.users.role,
-		createdAt: row.users.createdAt,
+		createdAt: row.users.createdAt.toISOString(),
 	};
 
 	const org: Organization = {
 		id: row.organizations.id,
 		name: row.organizations.name,
 		slug: row.organizations.slug,
-		createdAt: row.organizations.createdAt,
+		createdAt: row.organizations.createdAt.toISOString(),
 	};
 
 	c.set("user", user);
