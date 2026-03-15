@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import type { MeResponse } from "@mission-control/shared";
+import type { MeResponse, UserRole } from "@mission-control/shared";
 
 // --- env must be set before app is imported ---
 process.env.AUTH0_DOMAIN = "test.auth0.com";
@@ -15,7 +15,7 @@ const mockDbUser = {
 	auth0Id: "auth0|user1",
 	name: "Alice",
 	email: "alice@example.com",
-	role: "director" as const,
+	role: "director" as UserRole,
 	createdAt: FIXED_DATE,
 };
 
@@ -85,7 +85,7 @@ describe("GET /api/auth/me", () => {
 			headers: { Authorization: "Bearer bad.token.here" },
 		});
 		expect(res.status).toBe(401);
-		const body = await res.json();
+		const body = (await res.json()) as { error: string };
 		expect(body.error).toBe("Invalid token");
 	});
 
@@ -95,7 +95,7 @@ describe("GET /api/auth/me", () => {
 			headers: { Authorization: "Bearer valid.token.here" },
 		});
 		expect(res.status).toBe(401);
-		const body = await res.json();
+		const body = (await res.json()) as { error: string };
 		expect(body.error).toBe("User not found");
 	});
 
@@ -162,7 +162,7 @@ describe("GET /health (no auth required)", () => {
 	it("returns 200 without a token", async () => {
 		const res = await app.request("/health");
 		expect(res.status).toBe(200);
-		const body = await res.json();
+		const body = (await res.json()) as { status: string };
 		expect(body.status).toBe("ok");
 	});
 });
