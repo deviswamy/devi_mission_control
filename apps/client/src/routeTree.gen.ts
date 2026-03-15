@@ -3,7 +3,22 @@
 
 import { Route as rootRoute } from "./routes/__root";
 import { Route as IndexRoute } from "./routes/index";
+import { Route as LoginRoute } from "./routes/login";
+import { Route as AppRoute } from "./routes/app/index";
+import { Route as AppDashboardRoute } from "./routes/app/dashboard";
+import { Route as AppMissionsRoute } from "./routes/app/missions";
+import { Route as AppProfileRoute } from "./routes/app/profile";
 
-const routeTree = rootRoute.addChildren([IndexRoute]);
+const AppRouteWithChildren = AppRoute.addChildren([
+	AppDashboardRoute,
+	AppMissionsRoute,
+	AppProfileRoute,
+]);
+
+const routeTree = rootRoute.addChildren([
+	IndexRoute,
+	LoginRoute,
+	AppRouteWithChildren,
+]);
 
 export { routeTree };
