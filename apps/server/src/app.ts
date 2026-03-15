@@ -6,24 +6,25 @@ import { authMiddleware } from "./middleware/auth.js";
 import { errorMiddleware } from "./middleware/errors.js";
 import { tenantMiddleware } from "./middleware/tenant.js";
 
-const app = new Hono();
+// All /api routes require auth; tenant middleware exposes orgId after auth resolves
+const apiRoutes = new Hono()
+	.use("*", authMiddleware)
+	.use("*", tenantMiddleware)
+	.route("/auth", authRoutes);
 
-app.use("*", logger());
-app.use(
-	"*",
-	cors({
-		origin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
-		credentials: true,
-	})
-);
+const app = new Hono()
+	.use("*", logger())
+	.use(
+		"*",
+		cors({
+			origin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
+			credentials: true,
+		})
+	)
+	.get("/health", (c) => c.json({ status: "ok" }))
+	.route("/api", apiRoutes);
+
 app.onError(errorMiddleware);
 
-app.get("/health", (c) => c.json({ status: "ok" }));
-
-// All /api routes require auth; tenant middleware exposes orgId after auth resolves
-const api = app.basePath("/api").use("*", authMiddleware).use("*", tenantMiddleware);
-
-const authApi = api.route("/auth", authRoutes);
-
-export type AppType = typeof authApi;
+export type AppType = typeof app;
 export default app;

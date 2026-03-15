@@ -7,14 +7,14 @@ export type User = {
 	name: string;
 	email: string;
 	role: UserRole;
-	createdAt: Date;
+	createdAt: string;
 };
 
 export type Organization = {
 	id: string;
 	name: string;
 	slug: string;
-	createdAt: Date;
+	createdAt: string;
 };
 
 export type MeResponse = {

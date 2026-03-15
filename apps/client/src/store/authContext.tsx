@@ -1,16 +1,12 @@
 import { useAuth0 } from "@auth0/auth0-react";
+import type { MeResponse, Organization, User } from "@mission-control/shared";
+import { useQuery } from "@tanstack/react-query";
 import { createContext, type ReactNode, useContext } from "react";
-
-export type AppUser = {
-	id: string;
-	auth0Id: string;
-	name: string;
-	email: string;
-};
+import { api } from "../lib/api";
 
 type AuthContextValue = {
-	appUser: AppUser | null;
-	auth0User: ReturnType<typeof useAuth0>["user"];
+	user: User | null;
+	org: Organization | null;
 	isLoading: boolean;
 	isAuthenticated: boolean;
 	getToken: () => Promise<string>;
@@ -19,7 +15,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-	const { user, isLoading, isAuthenticated, getAccessTokenSilently } = useAuth0();
+	const { isLoading: auth0Loading, isAuthenticated, getAccessTokenSilently } = useAuth0();
 
 	const getToken = () =>
 		getAccessTokenSilently({
@@ -28,20 +24,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			},
 		});
 
-	// appUser will be populated once the user table + /auth/me endpoint exist
-	const appUser: AppUser | null = null;
+	const { data, isLoading: meLoading } = useQuery({
+		queryKey: ["me"],
+		queryFn: async (): Promise<MeResponse> => {
+			const token = await getToken();
+			const res = await api.api.auth.me.$get({}, { headers: { Authorization: `Bearer ${token}` } });
+			if (!res.ok) throw new Error("Failed to fetch user");
+			return res.json();
+		},
+		enabled: isAuthenticated,
+	});
 
 	return (
 		<AuthContext.Provider
-			value={{ appUser, auth0User: user, isLoading, isAuthenticated, getToken }}
+			value={{
+				user: data?.user ?? null,
+				org: data?.org ?? null,
+				isLoading: auth0Loading || (isAuthenticated && meLoading),
+				isAuthenticated,
+				getToken,
+			}}
 		>
 			{children}
 		</AuthContext.Provider>
 	);
 }
 
-export function useAuth() {
+export function useAuthContext() {
 	const ctx = useContext(AuthContext);
-	if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+	if (!ctx) throw new Error("useAuthContext must be used within AuthProvider");
 	return ctx;
 }
