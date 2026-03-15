@@ -1,0 +1,99 @@
+{
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7"
+  ],
+  "enabledPlugins": {
+    "pr-review-toolkit@claude-plugins-official": true
+  },
+  "PostToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/hooks/documentation-skill-trigger.sh"
+        }
+      ]
+    },
+    {
+      "matcher": "Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "entire hooks claude-code post-task"
+        }
+      ]
+    },
+    {
+      "matcher": "TodoWrite",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "entire hooks claude-code post-todo"
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "entire hooks claude-code pre-task"
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "entire hooks claude-code session-end"
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "entire hooks claude-code session-start"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bun .claude/hooks/quality-gate-stop.ts"
+        },
+        {
+          "type": "command",
+          "command": "entire hooks claude-code stop"
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "entire hooks claude-code user-prompt-submit"
+        }
+      ]
+    }
+  ],
+  "bypassPermissions": true,
+  "defaultMode": "default"
+}
