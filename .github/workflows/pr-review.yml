@@ -19,22 +19,10 @@ jobs:
           fetch-depth: 0
 
       - name: Run code-reviewer agent
-<<<<<<< Updated upstream
-        id: claude-review
-        uses: anthropics/claude-code-action@beta
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: >-
-            --model claude-opus-4-6
-            --max-turns 5
-            --allowedTools "Read,Grep,Glob,Bash"
-=======
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> Stashed changes
           prompt: |
             You are a senior code reviewer ensuring high standards of code quality and security.
 
@@ -66,46 +54,11 @@ jobs:
             - Approve: No CRITICAL or HIGH issues
             - Warning: MEDIUM issues only
             - Block: CRITICAL or HIGH issues found
-
             Output as markdown for a GitHub PR comment. Start with a one-line summary.
-<<<<<<< Updated upstream
-
-      - name: Read review output
-        id: read-review
-        if: always()
-        run: |
-          OUTPUT_FILE="${{ steps.claude-review.outputs.execution_file }}"
-          if [ -f "$OUTPUT_FILE" ]; then
-            {
-              echo 'REVIEW_BODY<<HEREDOC_DELIMITER'
-              echo "## Code Review (claude-opus-4-6)"
-              echo ""
-              cat "$OUTPUT_FILE"
-              echo 'HEREDOC_DELIMITER'
-            } >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo 'REVIEW_BODY<<HEREDOC_DELIMITER'
-              echo "## Code Review (claude-opus-4-6)"
-              echo ""
-              echo "_Review agent did not produce output. Check the workflow logs._"
-              echo 'HEREDOC_DELIMITER'
-            } >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Post review comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.read-review.outputs.REVIEW_BODY }}
-=======
           claude_args: |
             --model claude-sonnet-4-6
             --max-turns 5
             --allowedTools Bash,Read,Grep,Glob
->>>>>>> Stashed changes
-
   code-simplifier:
     name: Code Simplifier Agent
     runs-on: ubuntu-latest
@@ -116,22 +69,10 @@ jobs:
           fetch-depth: 0
 
       - name: Run code-simplifier agent
-<<<<<<< Updated upstream
-        id: claude-simplifier
-        uses: anthropics/claude-code-action@beta
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: >-
-            --model claude-opus-4-6
-            --max-turns 5
-            --allowedTools "Read,Glob,Grep,Bash"
-=======
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> Stashed changes
           prompt: |
             You are an expert code simplification specialist. Enhance clarity and maintainability
             while preserving exact functionality.
@@ -161,40 +102,7 @@ jobs:
             For each suggestion, show current code vs proposed simplification.
             If no simplifications are warranted, say so clearly.
             Output as markdown for a GitHub PR comment. Start with a one-line summary.
-<<<<<<< Updated upstream
-
-      - name: Read simplifier output
-        id: read-simplifier
-        if: always()
-        run: |
-          OUTPUT_FILE="${{ steps.claude-simplifier.outputs.execution_file }}"
-          if [ -f "$OUTPUT_FILE" ]; then
-            {
-              echo 'SIMPLIFIER_BODY<<HEREDOC_DELIMITER'
-              echo "## Code Simplification Suggestions (claude-opus-4-6)"
-              echo ""
-              cat "$OUTPUT_FILE"
-              echo 'HEREDOC_DELIMITER'
-            } >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo 'SIMPLIFIER_BODY<<HEREDOC_DELIMITER'
-              echo "## Code Simplification Suggestions (claude-opus-4-6)"
-              echo ""
-              echo "_Simplifier agent did not produce output. Check the workflow logs._"
-              echo 'HEREDOC_DELIMITER'
-            } >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Post simplifier comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.read-simplifier.outputs.SIMPLIFIER_BODY }}
-=======
           claude_args: |
             --model claude-sonnet-4-6
             --max-turns 5
             --allowedTools Bash,Read,Glob,Grep
->>>>>>> Stashed changes
